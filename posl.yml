@@ -1,0 +1,13 @@
+---
+- name: install postgress sql
+  hosts: app
+  become: yes
+  
+  tasks:
+  - name: Move data directory
+    ansible.builtin.lineinfile:
+      path: /etc/postgresql/{{ postgresql_vervion }}/main/postgresql.conf
+      state: present
+      regexp: '(data_directory = )'
+      line: \1'{{ postgresql_data_dir }}90909'
+      backrefs: yes

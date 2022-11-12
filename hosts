@@ -1,0 +1,14 @@
+[app]
+#vm2 ansible_host=158.160.37.85 os_name=Ubuntu
+vm3 ansible_host=158.160.33.88 os_name=CentOS
+
+[database]
+localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
+
+[web]
+localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
+
+[app:vars]
+postgresql_vervion=12
+postgresql_data_dir=/pgdata/1ds99/data
+postgresql_bin_path=/usr/lib/postgresql/12/bin

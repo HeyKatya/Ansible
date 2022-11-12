@@ -1,0 +1,14 @@
+---
+- name: pping
+  hosts: app
+  become: yes
+  tasks:
+  - name:
+    ping:
+
+- name: pping
+  hosts: web
+
+  tasks:
+  - name:
+    ping:
