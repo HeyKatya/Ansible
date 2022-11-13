@@ -1,33 +1,84 @@
 ---
-- name: install postgress sql
+- name: install docker
   hosts: app
   become: yes
-  
+
   tasks:
+   
+  - block:
+    - name: install a few prerequisite packages which let apt use packages over HTTPS
+      apt:
+        name: apt-transport-https,ca-certificates,curl,software-properties-common
+        state: latest
+        update_cache: yes
+    - name: add the GPG key for the official Docker repository to the system
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: add the Docker repository to APT sources
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+    - name: installing and starting the daemon Docker
+      apt:
+        name: docker-ce
+    when: ansible_facts['distribution'] == 'Ubuntu'
+      
+  - block:
+    - name: add docker repo
+      copy:
+        src: ./docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+
+    - name: install a few prerequisite packages which let apt use packages over HTTPS
+      dnf:
+        name: docker-ce
+        enablerepo: https://download.docker.com/linux/centos/docker-ce.repo
+        state: latest
+        update_cache: yes
+    when: ansible_facts['distribution'] == 'CentOS'
+    
+  - name: Start docker
+    service:
+      name: docker
+      state: started
+      enabled: yes
+  
+
+- name: install postgresql-server
+  hosts: database
+  become: yes
+
+  tasks:
+
   - name: Install packages
-    ansible.builtin.apt:
-      name: postgresql,postgresql-contrib,libpq-dev,python3-psycopg2
+    apt:
+      name: postgresql-{{ postgresql_vervion }},postgresql-contrib,libpq-dev,python3-psycopg2
       state: present
+      update_cache: yes
 
   - name: Check if PostgreSQL is initialized
-    ansible.builtin.stat:
+    stat:
       path: "{{ postgresql_data_dir }}/pg_hba.conf"
     register: postgres_data
 
-  - name: Empty data dir
-    ansible.builtin.file:
-      path: "{{ postgresql_data_dir }}"
-      state: absent
-    when: not postgres_data.stat.exists
-
-  - name: Initialize PostgreSQL
-    become_user: postgres
-    become: yes
-    ansible.builtin.shell: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_data_dir }}"
-    when: not postgres_data.stat.exists
-
-  - name: Start and enable service
-    ansible.builtin.service:
+  - name: Stop service postgresql
+    service:
       name: postgresql
-      state: started
-      enabled: true
+      state: stopped
+    when: not postgres_data.stat.exists
+
+  - name: Move data directory
+    lineinfile:
+      path: /etc/postgresql/{{ postgresql_vervion }}/main/postgresql.conf
+      state: present
+      regexp: '(data_directory = )'
+      line: \1'{{ postgresql_data_dir }}'
+      backrefs: yes
+    when: not postgres_data.stat.exists
+    notify: Restart PostgreSQL
+
+  handlers:
+    - name: Restart PostgreSQL
+      service:
+        name: postgresql
+        state: restarted
