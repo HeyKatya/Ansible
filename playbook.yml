@@ -33,12 +33,14 @@
         enablerepo: https://download.docker.com/linux/centos/docker-ce.repo
         state: latest
         update_cache: yes
+
     when: ansible_facts['distribution'] == 'CentOS'    
   - name: Start docker
     service:
       name: docker
       state: started
       enabled: yes
+
   
 - name: install postgresql-server
   hosts: database
