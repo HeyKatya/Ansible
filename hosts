@@ -1,5 +1,5 @@
 [app]
-vm2 ansible_host=51.250.86.157
+vm2 ansible_host=51.250.8.129
 vm3 ansible_host=158.160.40.230
 
 [database]
@@ -8,6 +8,6 @@ localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
 [web]
 localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
 
-[app:vars]
+[database:vars]
 postgresql_vervion=12
 postgresql_data_dir=/pgdata/12/data
